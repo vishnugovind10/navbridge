@@ -66,7 +66,9 @@ navbridge monitor `
   --admin-file examples/mmf_scenario/administrator_nav.csv `
   --start 2026-01-01 `
   --end 2026-01-31 `
-  --output-md - `
+  --output-json reports/mmf_january.json `
+  --output-md reports/mmf_january.md `
+  --audit-manifest reports/mmf_january.audit.json `
   --advise-policy
 ```
 
@@ -104,6 +106,7 @@ Key operational documents:
 - `docs/adapter_contracts.md`: integration contract for internal oracle and administrator adapters.
 - `docs/controls_matrix.md`: control objectives mapped to code and report evidence.
 - `docs/data_validation.md`: pre-run validation workflow for administrator files and adapter output.
+- `docs/evidence_retention.md`: audit manifest workflow for reproducible evidence packages.
 - `docs/internal_adoption_guide.md`: recommended path for adapting NavBridge internally.
 - `docs/model_risk_and_validation.md`: model-risk notes and validation expectations.
 - `docs/report_schema_v1.json`: JSON report schema.

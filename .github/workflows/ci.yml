@@ -26,4 +26,5 @@ jobs:
           navbridge --help
           navbridge monitor --help
           navbridge validate-admin-file --config examples/mmf_scenario/config.json --admin-file examples/mmf_scenario/administrator_nav.csv --start 2026-01-01 --end 2026-01-31
+          navbridge monitor --config examples/mmf_scenario/config.json --oracle simulated --drift-model BUIDL_STYLE --admin-file examples/mmf_scenario/administrator_nav.csv --start 2026-01-01 --end 2026-01-31 --output-json reports/ci_mmf.json --output-md reports/ci_mmf.md --audit-manifest reports/ci_mmf.audit.json --advise-policy
           python examples/mmf_scenario/run.py

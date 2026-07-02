@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 - Evidence Manifest
+
+- Added audit manifest generation for monitor runs with SHA256 fingerprints of config, administrator input, and persisted reports.
+- Added `--audit-manifest` CLI flag.
+- Added evidence-retention documentation and tests.
+
 ## 0.4.0 - Classification Audit Trail
 
 - Added stable classifier rule IDs, ruleset version, and per-event classification evidence.

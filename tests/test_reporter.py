@@ -9,6 +9,7 @@ from navbridge.monitor.engine import MonitorEngine
 from navbridge.oracle.simulated import SimulatedOracle, get_drift_model
 from navbridge.reporter.json_reporter import report_to_json
 from navbridge.reporter.markdown_reporter import report_to_markdown
+from navbridge.reporter.audit_manifest import AUDIT_MANIFEST_SCHEMA_VERSION
 
 
 def test_reporters_emit_round_trippable_json_and_required_markdown(tmp_path) -> None:
@@ -36,3 +37,4 @@ def test_reporters_emit_round_trippable_json_and_required_markdown(tmp_path) -> 
     assert "## Summary" in markdown
     assert "## Break Distribution" in markdown
     assert "## Material Breaks" in markdown
+    assert AUDIT_MANIFEST_SCHEMA_VERSION == "navbridge.audit_manifest.v1"

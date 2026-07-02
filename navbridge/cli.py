@@ -12,6 +12,7 @@ from navbridge.classifier.engine import BreakClassifier
 from navbridge.core.fund import FundConfig
 from navbridge.monitor.engine import MonitorEngine
 from navbridge.oracle.simulated import SimulatedOracle, get_drift_model
+from navbridge.reporter.audit_manifest import build_audit_manifest, write_audit_manifest
 from navbridge.reporter.json_reporter import write_json_report
 from navbridge.reporter.markdown_reporter import report_to_markdown, write_markdown_report
 from navbridge.validation.contracts import validate_administrator_file
@@ -29,6 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     monitor.add_argument("--end", required=True)
     monitor.add_argument("--output-json")
     monitor.add_argument("--output-md", default="-")
+    monitor.add_argument("--audit-manifest", help="Path to write a tamper-evident audit manifest for the run.")
     monitor.add_argument("--advise-policy", action="store_true")
     monitor.add_argument("--alignment-window", type=int, default=None)
     validate_admin = subparsers.add_parser("validate-admin-file", help="Validate an administrator NAV file against a FundConfig.")
@@ -74,6 +76,26 @@ def _run_monitor(args: argparse.Namespace) -> int:
         write_markdown_report(report, args.output_md)
     else:
         print(report_to_markdown(report))
+    if args.audit_manifest:
+        if not args.output_json and (not args.output_md or args.output_md == "-"):
+            raise SystemExit("--audit-manifest requires at least one persisted report output.")
+        manifest = build_audit_manifest(
+            report=report,
+            config_path=args.config,
+            admin_file=args.admin_file,
+            output_json=args.output_json,
+            output_md=args.output_md,
+            command={
+                "command": "monitor",
+                "oracle": args.oracle,
+                "drift_model": args.drift_model,
+                "start": args.start,
+                "end": args.end,
+                "alignment_window": args.alignment_window,
+                "advise_policy": args.advise_policy,
+            },
+        )
+        write_audit_manifest(manifest, args.audit_manifest)
     return 0
 
 
