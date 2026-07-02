@@ -12,6 +12,7 @@ def report_to_markdown(report: DivergenceReport) -> str:
         f"**Schema:** {report.schema_version}",
         f"**Run ID:** {report.run_id or 'not recorded'}",
         f"**Fund:** {report.fund_id}",
+        f"**Policy Pack:** {_policy_label(report)}",
         f"**Window:** {format_utc_datetime(report.report_window_start)} to {format_utc_datetime(report.report_window_end)}",
         f"**Generated:** {format_utc_datetime(report.generated_at) if report.generated_at else 'not recorded'}",
         "",
@@ -77,3 +78,11 @@ def write_markdown_report(report: DivergenceReport, path: str | Path) -> None:
     output = Path(path)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(report_to_markdown(report), encoding="utf-8")
+
+
+def _policy_label(report: DivergenceReport) -> str:
+    if not report.policy_pack:
+        return "not applied"
+    name = report.policy_pack.get("name") or report.policy_pack.get("id")
+    version = report.policy_pack.get("version")
+    return f"{name} v{version}"

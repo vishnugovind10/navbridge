@@ -22,6 +22,7 @@ class FundConfig:
     materiality_bps: float = 5.0
     oracle_update_frequency_minutes: int = 60
     alignment_window_minutes: int = 30
+    policy: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if not self.fund_id:
@@ -44,6 +45,7 @@ class FundConfig:
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "FundConfig":
         data = dict(payload)
+        data.pop("policy_pack", None)
         data["market_open"] = _parse_time(data["market_open"])
         data["market_close"] = _parse_time(data["market_close"])
         return cls(**data)
@@ -61,6 +63,7 @@ class FundConfig:
             "materiality_bps": self.materiality_bps,
             "oracle_update_frequency_minutes": self.oracle_update_frequency_minutes,
             "alignment_window_minutes": self.alignment_window_minutes,
+            "policy": self.policy,
         }
 
 

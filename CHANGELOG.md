@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 - Policy Packs
+
+- Added versioned Policy Pack framework with thresholds, escalation expectations, and evidence requirements.
+- Added `--policy-pack` for monitor and batch jobs.
+- Reports now include applied policy pack details and Markdown report policy headers.
+- Audit manifests fingerprint file-based policy packs.
+- Added example institutional MMF and Treasury policy packs.
+
 ## 0.6.0 - Batch Portfolio Runs
 
 - Added `navbridge batch` for file-based multi-job monitor runs.

@@ -61,6 +61,7 @@ navbridge validate-admin-file `
 
 navbridge monitor `
   --config examples/mmf_scenario/config.json `
+  --policy-pack policies/tokenized_mmf_v1.json `
   --oracle simulated `
   --drift-model BUIDL_STYLE `
   --admin-file examples/mmf_scenario/administrator_nav.csv `
@@ -111,6 +112,7 @@ Key operational documents:
 - `docs/evidence_retention.md`: audit manifest workflow for reproducible evidence packages.
 - `docs/internal_adoption_guide.md`: recommended path for adapting NavBridge internally.
 - `docs/model_risk_and_validation.md`: model-risk notes and validation expectations.
+- `docs/policy_packs.md`: versioned institutional policy execution framework.
 - `docs/report_schema_v1.json`: JSON report schema.
 - `SECURITY.md`: security boundary and vulnerability policy.
 

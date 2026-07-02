@@ -1,0 +1,23 @@
+{
+  "id": "tokenized_mmf_v1",
+  "version": "1.0",
+  "name": "Institutional Tokenized MMF Policy",
+  "thresholds": {
+    "tolerance_bps": 3.0,
+    "materiality_bps": 5.0
+  },
+  "escalation": {
+    "critical": "immediate",
+    "material": "next_business_day",
+    "warning": "daily_review"
+  },
+  "evidence": {
+    "require_audit_manifest": true,
+    "retain_json_report": true,
+    "retain_markdown_report": true
+  },
+  "metadata": {
+    "asset_class": "tokenized_money_market_fund",
+    "review_cycle": "quarterly"
+  }
+}

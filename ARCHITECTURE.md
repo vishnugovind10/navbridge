@@ -11,6 +11,7 @@ navbridge/
   administrator/   CSV and JSON administrator NAV ingesters
   classifier/      rule-based break classification
   monitor/         alignment, divergence calculation, report assembly
+  policy/          versioned institutional policy packs
   reporter/        JSON, Markdown, and tolerance recommendation output
   cli.py           command-line entry point
 ```
@@ -19,10 +20,11 @@ navbridge/
 
 1. `AdministratorAdapter` loads administrator NAV records.
 2. `OracleAdapter` returns oracle NAV records for the same window.
-3. `MonitorEngine` aligns records by nearest timestamp inside `alignment_window_minutes`.
-4. The monitor computes signed divergence in basis points.
-5. `BreakClassifier` applies explicit rules for the five V1 break types.
-6. `DivergenceReport` is serialized to JSON and Markdown.
+3. Optional `PolicyPack` overrides configured tolerance/materiality thresholds and evidence requirements.
+4. `MonitorEngine` aligns records by nearest timestamp inside `alignment_window_minutes`.
+5. The monitor computes signed divergence in basis points.
+6. `BreakClassifier` applies explicit rules for the five V1 break types.
+7. `DivergenceReport` is serialized to JSON and Markdown.
 
 ## Report Contract
 
@@ -34,6 +36,10 @@ JSON reports are versioned with `schema_version="navbridge.report.v1"`. Each rep
 - `config_snapshot`: fund policy and market-hours configuration used for the run.
 
 The schema is documented in `docs/report_schema_v1.json`.
+
+## Policy Execution
+
+Policy Packs are versioned JSON artifacts with thresholds, escalation expectations, and evidence requirements. When a policy pack is applied, reports include the policy snapshot under `policy_pack`, Markdown identifies the evaluated policy, and the CLI enforces required evidence such as `--audit-manifest`.
 
 ## V1 Break Types
 

@@ -11,6 +11,7 @@ This matrix maps NavBridge V1 behavior to controls an institutional team would n
 | Explain break categories | Rule-based classifier emits break type, confidence, and notes | JSON report `events[*].break_type`, `classification_confidence`, `notes` |
 | Support classification review | Events include stable rule IDs, ruleset version, and evidence | JSON report `events[*].classification_rule_id`, `classification_ruleset_version`, `classification_evidence` |
 | Separate policy from measurement | Thresholds live on `FundConfig`, not hidden constants | JSON report `config_snapshot` |
+| Execute versioned institutional policy | Policy Packs override thresholds and enforce evidence requirements | JSON report `policy_pack`, Markdown policy header |
 | Support audit repeatability | Reports carry `schema_version`, `run_id`, input counts, and parameters | JSON report header fields |
 | Preserve evidence lineage | Audit manifest fingerprints config, administrator input, and generated reports | `--audit-manifest` output |
 | Support portfolio operations | Batch runs produce per-job reports and aggregate summary status | `navbridge batch --summary-json` |

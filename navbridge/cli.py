@@ -15,6 +15,7 @@ from navbridge.core.fund import FundConfig
 from navbridge.core.report import DivergenceReport
 from navbridge.monitor.engine import MonitorEngine
 from navbridge.oracle.simulated import SimulatedOracle, get_drift_model
+from navbridge.policy.pack import apply_policy_pack, load_policy_pack
 from navbridge.reporter.audit_manifest import build_audit_manifest, write_audit_manifest
 from navbridge.reporter.json_reporter import write_json_report
 from navbridge.reporter.markdown_reporter import report_to_markdown, write_markdown_report
@@ -29,6 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     monitor.add_argument("--oracle", default="simulated", choices=["simulated"])
     monitor.add_argument("--drift-model", default="BUIDL_STYLE")
     monitor.add_argument("--admin-file", required=True)
+    monitor.add_argument("--policy-pack", help="Path to a versioned policy pack JSON file.")
     monitor.add_argument("--start", required=True)
     monitor.add_argument("--end", required=True)
     monitor.add_argument("--output-json")
@@ -61,6 +63,7 @@ def _run_monitor(args: argparse.Namespace) -> int:
         MonitorJob(
             config=args.config,
             admin_file=args.admin_file,
+            policy_pack=args.policy_pack,
             start=args.start,
             end=args.end,
             oracle=args.oracle,
@@ -80,6 +83,7 @@ def _run_monitor(args: argparse.Namespace) -> int:
 class MonitorJob:
     config: str
     admin_file: str
+    policy_pack: str | None
     start: str
     end: str
     oracle: str = "simulated"
@@ -96,6 +100,7 @@ def _run_monitor_job(job: MonitorJob | dict, *, emit_markdown: bool = False) -> 
         job = MonitorJob(
             config=job["config"],
             admin_file=job["admin_file"],
+            policy_pack=job.get("policy_pack"),
             start=job["start"],
             end=job["end"],
             oracle=job.get("oracle", "simulated"),
@@ -108,7 +113,14 @@ def _run_monitor_job(job: MonitorJob | dict, *, emit_markdown: bool = False) -> 
         )
     if job.oracle != "simulated":
         raise SystemExit("V1 only supports --oracle simulated")
-    config = FundConfig.from_dict(json.loads(Path(job.config).read_text(encoding="utf-8")))
+    config_path = Path(job.config)
+    raw_config = json.loads(config_path.read_text(encoding="utf-8"))
+    config = FundConfig.from_dict(raw_config)
+    if job.policy_pack:
+        policy_pack = load_policy_pack(job.policy_pack)
+    else:
+        policy_pack = load_policy_pack(raw_config.get("policy"), base_dir=config_path.parent)
+    config = apply_policy_pack(config, policy_pack)
     if job.alignment_window:
         config = FundConfig.from_dict({**config.to_dict(), "alignment_window_minutes": job.alignment_window})
     start = _parse_window_start(job.start)
@@ -129,6 +141,8 @@ def _run_monitor_job(job: MonitorJob | dict, *, emit_markdown: bool = False) -> 
         end=end,
         advise_policy=job.advise_policy,
     )
+    if policy_pack and policy_pack.evidence.get("require_audit_manifest") and not job.audit_manifest:
+        raise SystemExit(f"Policy pack {policy_pack.id} requires --audit-manifest.")
     if job.output_json:
         write_json_report(report, job.output_json)
     if job.output_md and job.output_md != "-":
@@ -142,12 +156,14 @@ def _run_monitor_job(job: MonitorJob | dict, *, emit_markdown: bool = False) -> 
             report=report,
             config_path=job.config,
             admin_file=job.admin_file,
+            policy_pack_path=job.policy_pack,
             output_json=job.output_json,
             output_md=job.output_md,
             command={
                 "command": "monitor",
                 "oracle": job.oracle,
                 "drift_model": job.drift_model,
+                "policy_pack": job.policy_pack,
                 "start": job.start,
                 "end": job.end,
                 "alignment_window": job.alignment_window,

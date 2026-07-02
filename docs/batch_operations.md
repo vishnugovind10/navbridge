@@ -11,6 +11,7 @@ Institutional users typically run NAV integrity checks across a portfolio of fun
       "name": "mmf_january",
       "config": "mmf_scenario/config.json",
       "admin_file": "mmf_scenario/administrator_nav.csv",
+      "policy_pack": "../policies/tokenized_mmf_v1.json",
       "oracle": "simulated",
       "drift_model": "BUIDL_STYLE",
       "start": "2026-01-01",

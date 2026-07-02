@@ -89,6 +89,7 @@ class MonitorEngine:
                 "advise_policy": advise_policy,
             },
             config_snapshot=self.config.to_dict(),
+            policy_pack=self.config.policy,
         )
         return report
 

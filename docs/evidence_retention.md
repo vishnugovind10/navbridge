@@ -26,6 +26,7 @@ navbridge monitor `
 - `navbridge_version`: installed package version.
 - `report_run_id`: deterministic report run identifier.
 - `input_files`: config and administrator NAV file hashes.
+- `input_files.policy_pack`: policy pack file hash when a file-based policy is used.
 - `output_files`: JSON and Markdown report hashes.
 - `report_summary`: observation counts, break counts, and policy-compliance status.
 - `command`: monitor parameters used for the run.

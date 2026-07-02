@@ -50,12 +50,20 @@ def build_audit_manifest(
     output_json: str | Path | None,
     output_md: str | Path | None,
     command: dict[str, Any],
+    policy_pack_path: str | Path | None = None,
 ) -> AuditManifest:
     output_files: dict[str, dict[str, Any]] = {}
     if output_json:
         output_files["json_report"] = file_fingerprint(output_json)
     if output_md and str(output_md) != "-":
         output_files["markdown_report"] = file_fingerprint(output_md)
+
+    input_files = {
+        "config": file_fingerprint(config_path),
+        "administrator_nav": file_fingerprint(admin_file),
+    }
+    if policy_pack_path:
+        input_files["policy_pack"] = file_fingerprint(policy_pack_path)
 
     return AuditManifest(
         schema_version=AUDIT_MANIFEST_SCHEMA_VERSION,
@@ -64,10 +72,7 @@ def build_audit_manifest(
         report_run_id=report.run_id,
         report_schema_version=report.schema_version,
         command=command,
-        input_files={
-            "config": file_fingerprint(config_path),
-            "administrator_nav": file_fingerprint(admin_file),
-        },
+        input_files=input_files,
         output_files=output_files,
         report_summary={
             "fund_id": report.fund_id,
@@ -76,6 +81,7 @@ def build_audit_manifest(
             "material_breaks": report.material_breaks,
             "critical_breaks": report.critical_breaks,
             "policy_compliance": report.policy_compliance,
+            "policy_pack": report.policy_pack,
         },
     )
 

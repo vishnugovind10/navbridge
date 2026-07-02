@@ -65,3 +65,46 @@ def test_batch_result_records_failed_jobs(tmp_path) -> None:
     output = tmp_path / "summary.json"
     write_batch_result(result, output)
     assert json.loads(output.read_text(encoding="utf-8"))["failed"] == 1
+
+
+def test_batch_resolves_relative_policy_pack_path(tmp_path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    out_dir = tmp_path / "out"
+    policy_path = tmp_path / "policy.json"
+    policy_path.write_text(
+        json.dumps(
+            {
+                "id": "tokenized_mmf_v1",
+                "version": "1.0",
+                "name": "Institutional MMF Policy",
+                "thresholds": {"tolerance_bps": 3, "materiality_bps": 5},
+                "evidence": {"require_audit_manifest": True},
+            }
+        ),
+        encoding="utf-8",
+    )
+    batch = tmp_path / "batch.json"
+    batch.write_text(
+        json.dumps(
+            {
+                "jobs": [
+                    {
+                        "name": "mmf",
+                        "config": str(root / "examples" / "mmf_scenario" / "config.json"),
+                        "admin_file": str(root / "examples" / "mmf_scenario" / "administrator_nav.csv"),
+                        "policy_pack": "policy.json",
+                        "start": "2026-01-01",
+                        "end": "2026-01-31",
+                        "output_json": str(out_dir / "mmf.json"),
+                        "output_md": str(out_dir / "mmf.md"),
+                        "audit_manifest": str(out_dir / "mmf.audit.json"),
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["batch", "--file", str(batch)]) == 0
+    manifest = json.loads((out_dir / "mmf.audit.json").read_text(encoding="utf-8"))
+    assert "policy_pack" in manifest["input_files"]

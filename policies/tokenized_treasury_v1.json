@@ -1,0 +1,23 @@
+{
+  "id": "tokenized_treasury_v1",
+  "version": "1.0",
+  "name": "Institutional Tokenized Treasury Policy",
+  "thresholds": {
+    "tolerance_bps": 2.0,
+    "materiality_bps": 5.0
+  },
+  "escalation": {
+    "critical": "immediate",
+    "material": "same_business_day",
+    "warning": "daily_review"
+  },
+  "evidence": {
+    "require_audit_manifest": true,
+    "retain_json_report": true,
+    "retain_markdown_report": true
+  },
+  "metadata": {
+    "asset_class": "tokenized_treasury_fund",
+    "review_cycle": "quarterly"
+  }
+}

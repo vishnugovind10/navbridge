@@ -31,6 +31,7 @@ class DivergenceReport:
     input_record_counts: dict[str, int] = field(default_factory=dict)
     monitor_parameters: dict[str, Any] = field(default_factory=dict)
     config_snapshot: dict[str, Any] = field(default_factory=dict)
+    policy_pack: dict[str, Any] | None = None
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "DivergenceReport":
@@ -59,6 +60,7 @@ class DivergenceReport:
             input_record_counts=dict(payload.get("input_record_counts", {})),
             monitor_parameters=dict(payload.get("monitor_parameters", {})),
             config_snapshot=dict(payload.get("config_snapshot", {})),
+            policy_pack=payload.get("policy_pack"),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -71,6 +73,7 @@ class DivergenceReport:
             "input_record_counts": self.input_record_counts,
             "monitor_parameters": self.monitor_parameters,
             "config_snapshot": self.config_snapshot,
+            "policy_pack": self.policy_pack,
             "total_observations": self.total_observations,
             "total_breaks": self.total_breaks,
             "material_breaks": self.material_breaks,

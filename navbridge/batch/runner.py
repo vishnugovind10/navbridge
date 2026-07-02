@@ -108,7 +108,7 @@ def write_batch_result(result: BatchRunResult, path: str | Path) -> None:
 
 def _resolve_job_paths(job: dict[str, Any], base_dir: Path) -> dict[str, Any]:
     resolved = dict(job)
-    for key in ("config", "admin_file", "output_json", "output_md", "audit_manifest"):
+    for key in ("config", "admin_file", "policy_pack", "output_json", "output_md", "audit_manifest"):
         if not resolved.get(key) or str(resolved[key]) == "-":
             continue
         path = Path(str(resolved[key]))
