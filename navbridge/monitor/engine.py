@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from bisect import bisect_left
 from collections import Counter
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -11,8 +13,13 @@ from navbridge.core.divergence import DivergenceDirection, DivergenceEvent
 from navbridge.core.fund import FundConfig
 from navbridge.core.nav_record import NavRecord
 from navbridge.core.report import DivergenceReport
+from navbridge.core.schema import RUN_ID_ALGORITHM, stable_digest
 from navbridge.oracle.base import OracleAdapter
 from navbridge.reporter.policy_advisor import recommend_tolerance_bps
+
+
+class MonitorEngineError(ValueError):
+    """Raised when monitor inputs violate NavBridge runtime contracts."""
 
 
 class MonitorEngine:
@@ -29,12 +36,30 @@ class MonitorEngine:
         self.classifier = classifier
 
     def run(self, start: datetime, end: datetime, advise_policy: bool = False) -> DivergenceReport:
+        if start >= end:
+            raise MonitorEngineError("monitor start must be before end")
+        start = start.astimezone(UTC)
+        end = end.astimezone(UTC)
         oracle_records = sorted(self.oracle.get_nav_series(start, end), key=lambda item: item.timestamp)
         administrator_records = sorted(self.administrator.get_nav_series(start, end), key=lambda item: item.timestamp)
-        events = [self._event_for(admin, oracle_records) for admin in administrator_records]
+        self._validate_records(oracle_records, source="oracle")
+        self._validate_records(administrator_records, source="administrator")
+        oracle_index = _OracleIndex.from_records(oracle_records)
+        events = [self._event_for(admin, oracle_index) for admin in administrator_records]
         events = self.classifier.classify(events)
         distribution = Counter(event.break_type for event in events if event.break_type is not None)
         magnitudes = [abs(event.divergence_bps) for event in events]
+        run_id = stable_digest(
+            {
+                "fund_id": self.config.fund_id,
+                "start": start.isoformat(),
+                "end": end.isoformat(),
+                "config": self.config.to_dict(),
+                "oracle_records": len(oracle_records),
+                "administrator_records": len(administrator_records),
+                "run_id_algorithm": RUN_ID_ALGORITHM,
+            }
+        )
         report = DivergenceReport(
             fund_id=self.config.fund_id,
             report_window_start=start,
@@ -50,11 +75,24 @@ class MonitorEngine:
             events=events,
             recommended_tolerance_bps=recommend_tolerance_bps(events) if advise_policy else None,
             generated_at=datetime.now(UTC),
+            run_id=run_id,
+            input_record_counts={
+                "oracle": len(oracle_records),
+                "administrator": len(administrator_records),
+                "aligned": len(events),
+            },
+            monitor_parameters={
+                "alignment_window_minutes": self.config.alignment_window_minutes,
+                "oracle_update_frequency_minutes": self.config.oracle_update_frequency_minutes,
+                "run_id_algorithm": RUN_ID_ALGORITHM,
+                "advise_policy": advise_policy,
+            },
+            config_snapshot=self.config.to_dict(),
         )
         return report
 
-    def _event_for(self, admin: NavRecord, oracle_records: list[NavRecord]) -> DivergenceEvent:
-        oracle = self._nearest_oracle(admin, oracle_records)
+    def _event_for(self, admin: NavRecord, oracle_index: "_OracleIndex") -> DivergenceEvent:
+        oracle = self._nearest_oracle(admin, oracle_index)
         if oracle is None:
             oracle = NavRecord(
                 fund_id=admin.fund_id,
@@ -62,7 +100,23 @@ class MonitorEngine:
                 timestamp=admin.timestamp,
                 nav_per_unit=Decimal("0"),
                 currency=admin.currency,
-                metadata={"alignment_failure": True},
+                metadata={
+                    "alignment_failure": True,
+                    "alignment_window_minutes": self.config.alignment_window_minutes,
+                },
+            )
+        else:
+            oracle = NavRecord(
+                fund_id=oracle.fund_id,
+                source=oracle.source,
+                timestamp=oracle.timestamp,
+                nav_per_unit=oracle.nav_per_unit,
+                currency=oracle.currency,
+                metadata={
+                    **oracle.metadata,
+                    "alignment_delta_seconds": int(abs((oracle.timestamp - admin.timestamp).total_seconds())),
+                    "alignment_window_minutes": self.config.alignment_window_minutes,
+                },
             )
         signed = float((oracle.nav_per_unit - admin.nav_per_unit) / admin.nav_per_unit * Decimal("10000"))
         return DivergenceEvent(
@@ -77,11 +131,12 @@ class MonitorEngine:
             notes="Unclassified before rule evaluation.",
         )
 
-    def _nearest_oracle(self, admin: NavRecord, oracle_records: list[NavRecord]) -> NavRecord | None:
+    def _nearest_oracle(self, admin: NavRecord, oracle_index: "_OracleIndex") -> NavRecord | None:
         window = timedelta(minutes=self.config.alignment_window_minutes)
+        candidates = oracle_index.nearest_candidates(admin.timestamp)
         candidates = [
             item
-            for item in oracle_records
+            for item in candidates
             if item.fund_id == admin.fund_id
             and item.currency == admin.currency
             and abs(item.timestamp - admin.timestamp) <= window
@@ -90,6 +145,20 @@ class MonitorEngine:
             return None
         return min(candidates, key=lambda item: abs(item.timestamp - admin.timestamp))
 
+    def _validate_records(self, records: list[NavRecord], source: str) -> None:
+        seen: set[tuple[str, str, datetime]] = set()
+        for record in records:
+            if record.source != source:
+                raise MonitorEngineError(f"{source} adapter returned record with source={record.source}")
+            if record.fund_id != self.config.fund_id:
+                raise MonitorEngineError(f"{source} adapter returned fund_id={record.fund_id}; expected {self.config.fund_id}")
+            if record.currency != self.config.base_currency:
+                raise MonitorEngineError(f"{source} adapter returned currency={record.currency}; expected {self.config.base_currency}")
+            key = (record.fund_id, record.currency, record.timestamp)
+            if key in seen:
+                raise MonitorEngineError(f"{source} adapter returned duplicate timestamp {record.timestamp.isoformat()}")
+            seen.add(key)
+
 
 def _direction(signed_bps: float) -> DivergenceDirection:
     if signed_bps > 0:
@@ -97,3 +166,24 @@ def _direction(signed_bps: float) -> DivergenceDirection:
     if signed_bps < 0:
         return "oracle_below"
     return "equal"
+
+
+@dataclass(frozen=True)
+class _OracleIndex:
+    timestamps: list[datetime]
+    records: list[NavRecord]
+
+    @classmethod
+    def from_records(cls, records: list[NavRecord]) -> "_OracleIndex":
+        return cls([record.timestamp for record in records], records)
+
+    def nearest_candidates(self, timestamp: datetime) -> list[NavRecord]:
+        if not self.records:
+            return []
+        index = bisect_left(self.timestamps, timestamp)
+        candidates: list[NavRecord] = []
+        if index < len(self.records):
+            candidates.append(self.records[index])
+        if index > 0:
+            candidates.append(self.records[index - 1])
+        return candidates

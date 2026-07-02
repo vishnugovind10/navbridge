@@ -32,6 +32,7 @@ def test_reporters_emit_round_trippable_json_and_required_markdown(tmp_path) -> 
     )
     assert DivergenceReport.from_dict(__import__("json").loads(report_to_json(report))).fund_id == "FUND_001"
     markdown = report_to_markdown(report)
+    assert "Run ID" in markdown
     assert "## Summary" in markdown
     assert "## Break Distribution" in markdown
     assert "## Material Breaks" in markdown

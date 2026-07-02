@@ -9,6 +9,8 @@ from navbridge.core.report import DivergenceReport
 def report_to_markdown(report: DivergenceReport) -> str:
     lines = [
         "# NavBridge Divergence Report",
+        f"**Schema:** {report.schema_version}",
+        f"**Run ID:** {report.run_id or 'not recorded'}",
         f"**Fund:** {report.fund_id}",
         f"**Window:** {format_utc_datetime(report.report_window_start)} to {format_utc_datetime(report.report_window_end)}",
         f"**Generated:** {format_utc_datetime(report.generated_at) if report.generated_at else 'not recorded'}",
@@ -17,6 +19,8 @@ def report_to_markdown(report: DivergenceReport) -> str:
         "| Metric | Value |",
         "|---|---|",
         f"| Total NAV observations | {report.total_observations} |",
+        f"| Oracle records read | {report.input_record_counts.get('oracle', 0)} |",
+        f"| Administrator records read | {report.input_record_counts.get('administrator', 0)} |",
         f"| Total divergence events | {report.total_breaks} |",
         f"| Material breaks | {report.material_breaks} |",
         f"| Critical breaks | {report.critical_breaks} |",

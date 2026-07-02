@@ -24,6 +24,17 @@ navbridge/
 5. `BreakClassifier` applies explicit rules for the five V1 break types.
 6. `DivergenceReport` is serialized to JSON and Markdown.
 
+## Report Contract
+
+JSON reports are versioned with `schema_version="navbridge.report.v1"`. Each report includes:
+
+- `run_id`: deterministic digest over fund, window, config, input counts, and run algorithm.
+- `input_record_counts`: oracle, administrator, and aligned record counts.
+- `monitor_parameters`: alignment window, oracle update interval, and policy-advisor setting.
+- `config_snapshot`: fund policy and market-hours configuration used for the run.
+
+The schema is documented in `docs/report_schema_v1.json`.
+
 ## V1 Break Types
 
 - `timing_drift`

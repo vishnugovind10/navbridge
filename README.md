@@ -4,15 +4,22 @@ NAV integrity monitoring for tokenized funds.
 
 NavBridge is an open-source Python framework for detecting, classifying, and documenting divergence between on-chain oracle NAV and off-chain fund administrator NAV.
 
+It is designed to be adapted by fund operations, oracle, tokenization, and protocol risk teams that need explainable NAV integrity controls instead of a demo dashboard.
+
 ## Real Report Sample
 
 Generated from `examples/mmf_scenario`:
 
 ```markdown
+**Schema:** navbridge.report.v1
+**Run ID:** 36284246c568b7e8
+
 ## Summary
 | Metric | Value |
 |---|---|
 | Total NAV observations | 31 |
+| Oracle records read | 744 |
+| Administrator records read | 31 |
 | Total divergence events | 31 |
 | Material breaks | 0 |
 | Critical breaks | 0 |
@@ -85,6 +92,15 @@ See `ARCHITECTURE.md`.
 administrator files -> ingesters -> monitor -> classifier -> report object -> JSON/Markdown
 simulated oracle ----^
 ```
+
+Key operational documents:
+
+- `docs/adapter_contracts.md`: integration contract for internal oracle and administrator adapters.
+- `docs/controls_matrix.md`: control objectives mapped to code and report evidence.
+- `docs/internal_adoption_guide.md`: recommended path for adapting NavBridge internally.
+- `docs/model_risk_and_validation.md`: model-risk notes and validation expectations.
+- `docs/report_schema_v1.json`: JSON report schema.
+- `SECURITY.md`: security boundary and vulnerability policy.
 
 ## Limitations
 

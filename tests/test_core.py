@@ -57,5 +57,12 @@ def test_report_round_trip() -> None:
         policy_compliance=False,
         events=[event],
         generated_at=timestamp,
+        run_id="abc123",
+        input_record_counts={"oracle": 1, "administrator": 1, "aligned": 1},
+        monitor_parameters={"alignment_window_minutes": 30},
+        config_snapshot={"fund_id": "FUND_001"},
     )
-    assert DivergenceReport.from_dict(report.to_dict()).events[0].break_type == BreakType.METHODOLOGY_DRIFT
+    parsed = DivergenceReport.from_dict(report.to_dict())
+    assert parsed.events[0].break_type == BreakType.METHODOLOGY_DRIFT
+    assert parsed.run_id == "abc123"
+    assert parsed.input_record_counts["aligned"] == 1

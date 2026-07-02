@@ -7,6 +7,7 @@ from typing import Any
 from navbridge.classifier.types import BreakType
 from navbridge.core.divergence import DivergenceEvent
 from navbridge.core.nav_record import format_utc_datetime, parse_utc_datetime
+from navbridge.core.schema import REPORT_SCHEMA_VERSION
 
 
 @dataclass
@@ -25,6 +26,11 @@ class DivergenceReport:
     events: list[DivergenceEvent] = field(default_factory=list)
     recommended_tolerance_bps: float | None = None
     generated_at: datetime | None = None
+    schema_version: str = REPORT_SCHEMA_VERSION
+    run_id: str | None = None
+    input_record_counts: dict[str, int] = field(default_factory=dict)
+    monitor_parameters: dict[str, Any] = field(default_factory=dict)
+    config_snapshot: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "DivergenceReport":
@@ -48,13 +54,23 @@ class DivergenceReport:
             generated_at=parse_utc_datetime(payload["generated_at"])
             if payload.get("generated_at")
             else None,
+            schema_version=payload.get("schema_version", REPORT_SCHEMA_VERSION),
+            run_id=payload.get("run_id"),
+            input_record_counts=dict(payload.get("input_record_counts", {})),
+            monitor_parameters=dict(payload.get("monitor_parameters", {})),
+            config_snapshot=dict(payload.get("config_snapshot", {})),
         )
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "schema_version": self.schema_version,
+            "run_id": self.run_id,
             "fund_id": self.fund_id,
             "report_window_start": format_utc_datetime(self.report_window_start),
             "report_window_end": format_utc_datetime(self.report_window_end),
+            "input_record_counts": self.input_record_counts,
+            "monitor_parameters": self.monitor_parameters,
+            "config_snapshot": self.config_snapshot,
             "total_observations": self.total_observations,
             "total_breaks": self.total_breaks,
             "material_breaks": self.material_breaks,
