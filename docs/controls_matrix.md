@@ -9,6 +9,7 @@ This matrix maps NavBridge V1 behavior to controls an institutional team would n
 | Detect missing or stale oracle data | Alignment failures and stale oracle records classify as `data_feed_failure` | JSON report `break_type_distribution`, Markdown material breaks |
 | Avoid silent adapter drift | Monitor validates source, fund ID, currency, and duplicate timestamps | `MonitorEngineError` |
 | Explain break categories | Rule-based classifier emits break type, confidence, and notes | JSON report `events[*].break_type`, `classification_confidence`, `notes` |
+| Support classification review | Events include stable rule IDs, ruleset version, and evidence | JSON report `events[*].classification_rule_id`, `classification_ruleset_version`, `classification_evidence` |
 | Separate policy from measurement | Thresholds live on `FundConfig`, not hidden constants | JSON report `config_snapshot` |
 | Support audit repeatability | Reports carry `schema_version`, `run_id`, input counts, and parameters | JSON report header fields |
 | Provide readable control evidence | Markdown reporter summarizes material breaks and policy status | Markdown report output |

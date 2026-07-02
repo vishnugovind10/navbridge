@@ -22,6 +22,9 @@ class DivergenceEvent:
     severity: Severity
     classification_confidence: float
     notes: str
+    classification_rule_id: str | None = None
+    classification_ruleset_version: str | None = None
+    classification_evidence: dict[str, Any] | None = None
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "DivergenceEvent":
@@ -35,6 +38,9 @@ class DivergenceEvent:
             severity=payload["severity"],
             classification_confidence=float(payload["classification_confidence"]),
             notes=payload["notes"],
+            classification_rule_id=payload.get("classification_rule_id"),
+            classification_ruleset_version=payload.get("classification_ruleset_version"),
+            classification_evidence=dict(payload.get("classification_evidence", {})),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,5 +53,8 @@ class DivergenceEvent:
             "break_type": self.break_type.value if self.break_type else None,
             "severity": self.severity,
             "classification_confidence": self.classification_confidence,
+            "classification_rule_id": self.classification_rule_id,
+            "classification_ruleset_version": self.classification_ruleset_version,
+            "classification_evidence": self.classification_evidence or {},
             "notes": self.notes,
         }

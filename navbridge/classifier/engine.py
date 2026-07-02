@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from navbridge.classifier.decision import CLASSIFIER_RULESET_VERSION
 from navbridge.classifier.rules import classify_event
 from navbridge.classifier.types import BreakType
 from navbridge.core.divergence import DivergenceEvent, Severity
@@ -26,10 +27,17 @@ class BreakClassifier:
     def classify(self, events: list[DivergenceEvent]) -> list[DivergenceEvent]:
         classified: list[DivergenceEvent] = []
         for event in events:
-            break_type, confidence, notes = classify_event(event, self.config, events)
-            event.break_type = break_type
-            event.classification_confidence = confidence
-            event.notes = notes
-            event.severity = "critical" if break_type == BreakType.DATA_FEED_FAILURE else severity(event.divergence_bps, self.config)
+            decision = classify_event(event, self.config, events)
+            event.break_type = decision.break_type
+            event.classification_confidence = decision.confidence
+            event.notes = decision.notes
+            event.classification_rule_id = decision.rule_id
+            event.classification_ruleset_version = CLASSIFIER_RULESET_VERSION
+            event.classification_evidence = {
+                **decision.evidence,
+                "tolerance_bps": self.config.tolerance_bps,
+                "materiality_bps": self.config.materiality_bps,
+            }
+            event.severity = "critical" if decision.break_type == BreakType.DATA_FEED_FAILURE else severity(event.divergence_bps, self.config)
             classified.append(event)
         return classified

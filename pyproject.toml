@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "navbridge"
-version = "0.3.0"
+version = "0.4.0"
 description = "NAV integrity monitoring for tokenized funds and RWA portfolios."
 readme = "README.md"
 requires-python = ">=3.11"

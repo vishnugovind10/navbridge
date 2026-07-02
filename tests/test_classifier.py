@@ -28,21 +28,30 @@ def _event(metadata=None, timestamp=datetime(2026, 1, 8, 15, tzinfo=UTC), bps=3.
 
 def test_data_feed_failure_rule() -> None:
     event = _event({"stale_duration_minutes": 180})
-    assert BreakClassifier(_config()).classify([event])[0].break_type == BreakType.DATA_FEED_FAILURE
+    classified = BreakClassifier(_config()).classify([event])[0]
+    assert classified.break_type == BreakType.DATA_FEED_FAILURE
+    assert classified.classification_rule_id == "data_feed_failure_stale_nav"
+    assert classified.classification_evidence["threshold_minutes"] == 120
 
 
 def test_corporate_action_rule() -> None:
     event = _event({"corporate_action_delay": True})
-    assert BreakClassifier(_config()).classify([event])[0].break_type == BreakType.CORPORATE_ACTION_LAG
+    classified = BreakClassifier(_config()).classify([event])[0]
+    assert classified.break_type == BreakType.CORPORATE_ACTION_LAG
+    assert classified.classification_rule_id == "corporate_action_delay_window"
 
 
 def test_market_hours_rule() -> None:
     event = _event(timestamp=datetime(2026, 1, 10, 21, tzinfo=UTC))
-    assert BreakClassifier(_config()).classify([event])[0].break_type == BreakType.MARKET_HOURS_ASYMMETRY
+    classified = BreakClassifier(_config()).classify([event])[0]
+    assert classified.break_type == BreakType.MARKET_HOURS_ASYMMETRY
+    assert classified.classification_rule_id == "market_hours_closed"
 
 
 def test_clean_data_has_no_break_type() -> None:
     event = _event(bps=0.0)
     event.divergence_direction = "equal"
     event.oracle_record = NavRecord("FUND_001", "oracle", event.oracle_record.timestamp, Decimal("100.00"), "USD", {})
-    assert BreakClassifier(_config()).classify([event])[0].break_type is None
+    classified = BreakClassifier(_config()).classify([event])[0]
+    assert classified.break_type is None
+    assert classified.classification_rule_id == "clean_equal_nav"

@@ -11,6 +11,7 @@ NavBridge V1 uses deterministic simulation and rule-based classification. It sho
 - Corporate-action source and timing assumptions.
 - Stale-feed detection interval.
 - Rule ordering in `classifier/rules.py`.
+- Stability of `classification_rule_id` values used by downstream reviewers.
 
 ## What the V1 Simulation Proves
 
@@ -29,4 +30,5 @@ The simulation proves that the monitor, classifier, reporter, and policy advisor
 - No hidden ML scoring.
 - No hardcoded threshold outside `FundConfig`.
 - JSON reports include schema version, run ID, input counts, monitor parameters, and config snapshot.
+- Each classified event includes the ruleset version, rule ID, and evidence used for the decision.
 - Adapter boundary validation fails fast on wrong fund, wrong currency, wrong source, and duplicate timestamps.

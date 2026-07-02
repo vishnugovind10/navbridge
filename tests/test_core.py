@@ -42,6 +42,9 @@ def test_report_round_trip() -> None:
         "critical",
         1.0,
         "test",
+        classification_rule_id="methodology_persistent_direction",
+        classification_ruleset_version="navbridge.classifier.rules.v1",
+        classification_evidence={"same_direction_ratio": 1.0},
     )
     report = DivergenceReport(
         fund_id="FUND_001",
@@ -64,5 +67,7 @@ def test_report_round_trip() -> None:
     )
     parsed = DivergenceReport.from_dict(report.to_dict())
     assert parsed.events[0].break_type == BreakType.METHODOLOGY_DRIFT
+    assert parsed.events[0].classification_rule_id == "methodology_persistent_direction"
+    assert parsed.events[0].classification_evidence["same_direction_ratio"] == 1.0
     assert parsed.run_id == "abc123"
     assert parsed.input_record_counts["aligned"] == 1

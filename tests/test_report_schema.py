@@ -28,3 +28,6 @@ def test_json_report_contains_schema_required_fields() -> None:
     assert payload["schema_version"] == "navbridge.report.v1"
     assert payload["input_record_counts"]["aligned"] == payload["total_observations"]
     assert payload["monitor_parameters"]["alignment_window_minutes"] == config.alignment_window_minutes
+    assert payload["events"][0]["classification_rule_id"]
+    assert payload["events"][0]["classification_ruleset_version"] == "navbridge.classifier.rules.v1"
+    assert "tolerance_bps" in payload["events"][0]["classification_evidence"]

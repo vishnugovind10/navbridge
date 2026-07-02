@@ -62,6 +62,9 @@
           "break_type",
           "severity",
           "classification_confidence",
+          "classification_rule_id",
+          "classification_ruleset_version",
+          "classification_evidence",
           "notes"
         ]
       }

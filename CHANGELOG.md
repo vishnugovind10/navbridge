@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - Classification Audit Trail
+
+- Added stable classifier rule IDs, ruleset version, and per-event classification evidence.
+- Extended JSON report schema documentation for classification audit fields.
+- Updated classification, controls, and model-risk docs.
+- Added tests for classifier rule metadata and report schema output.
+
 ## 0.3.0 - Validation and Conformance Surface
 
 - Added `navbridge.validation` for pre-run adapter and administrator-file validation.
