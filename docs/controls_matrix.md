@@ -13,6 +13,7 @@ This matrix maps NavBridge V1 behavior to controls an institutional team would n
 | Separate policy from measurement | Thresholds live on `FundConfig`, not hidden constants | JSON report `config_snapshot` |
 | Support audit repeatability | Reports carry `schema_version`, `run_id`, input counts, and parameters | JSON report header fields |
 | Preserve evidence lineage | Audit manifest fingerprints config, administrator input, and generated reports | `--audit-manifest` output |
+| Support portfolio operations | Batch runs produce per-job reports and aggregate summary status | `navbridge batch --summary-json` |
 | Provide readable control evidence | Markdown reporter summarizes material breaks and policy status | Markdown report output |
 | Avoid scaling bottlenecks in batch runs | Monitor uses indexed nearest-timestamp lookup for oracle alignment | `navbridge/monitor/engine.py` |
 

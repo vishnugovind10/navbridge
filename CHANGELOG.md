@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 - Batch Portfolio Runs
+
+- Added `navbridge batch` for file-based multi-job monitor runs.
+- Added batch result schema and JSON summary output.
+- Added batch example and batch operation docs.
+- Added tests for successful and failed batch jobs.
+
 ## 0.5.0 - Evidence Manifest
 
 - Added audit manifest generation for monitor runs with SHA256 fingerprints of config, administrator input, and persisted reports.

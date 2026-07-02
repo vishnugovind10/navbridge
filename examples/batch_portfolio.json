@@ -1,0 +1,30 @@
+{
+  "jobs": [
+    {
+      "name": "mmf_january",
+      "config": "mmf_scenario/config.json",
+      "admin_file": "mmf_scenario/administrator_nav.csv",
+      "oracle": "simulated",
+      "drift_model": "BUIDL_STYLE",
+      "start": "2026-01-01",
+      "end": "2026-01-31",
+      "output_json": "../reports/batch_mmf_january.json",
+      "output_md": "../reports/batch_mmf_january.md",
+      "audit_manifest": "../reports/batch_mmf_january.audit.json",
+      "advise_policy": true
+    },
+    {
+      "name": "treasury_january",
+      "config": "treasury_fund_scenario/config.json",
+      "admin_file": "treasury_fund_scenario/administrator_nav.csv",
+      "oracle": "simulated",
+      "drift_model": "ONDO_STYLE",
+      "start": "2026-01-01",
+      "end": "2026-01-31",
+      "output_json": "../reports/batch_treasury_january.json",
+      "output_md": "../reports/batch_treasury_january.md",
+      "audit_manifest": "../reports/batch_treasury_january.audit.json",
+      "advise_policy": true
+    }
+  ]
+}

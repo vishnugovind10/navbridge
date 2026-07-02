@@ -8,7 +8,7 @@ This guide is for teams evaluating whether NavBridge can be adapted inside an in
 2. Write one internal `AdministratorAdapter` that maps the fund administrator's daily NAV file or API output to `NavRecord`.
 3. Write one internal `OracleAdapter` that maps the approved oracle feed to `NavRecord`.
 4. Validate administrator records with `navbridge validate-admin-file` or `validate_nav_records()`.
-5. Run NavBridge in batch mode for a historical period and compare output against existing reconciliation breaks.
+5. Run `navbridge batch` for a historical period and compare output against existing reconciliation breaks.
 6. Write an audit manifest with `--audit-manifest` and store it with JSON and Markdown reports.
 
 ## Internal Extension Points
@@ -29,6 +29,7 @@ This guide is for teams evaluating whether NavBridge can be adapted inside an in
 - JSON schema compatibility for downstream systems.
 - Batch performance over expected fund and observation volumes.
 - Evidence-retention location for JSON reports, Markdown reports, and audit manifests.
+- Batch summary ingestion for operational dashboards or workflow queues.
 
 ## Suggested Operating Model
 

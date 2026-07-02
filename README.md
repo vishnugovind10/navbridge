@@ -78,6 +78,7 @@ Run all examples:
 python examples/mmf_scenario/run.py
 python examples/treasury_fund_scenario/run.py
 python examples/market_hours_scenario/run.py
+navbridge batch --file examples/batch_portfolio.json --summary-json reports/batch_summary.json
 ```
 
 Run tests:
@@ -91,6 +92,7 @@ python -m pytest -q
 - `examples/mmf_scenario`: tokenized money market fund with weekend and after-hours drift.
 - `examples/treasury_fund_scenario`: treasury fund with a simulated coupon/corporate-action lag.
 - `examples/market_hours_scenario`: oracle feed degradation where stale NAV is classified as critical.
+- `examples/batch_portfolio.json`: batch run over multiple fund scenarios with per-run evidence manifests.
 
 ## Architecture
 
