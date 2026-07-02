@@ -1,0 +1,13 @@
+{
+  "fund_id": "FUND_UST",
+  "fund_type": "treasury_bond",
+  "base_currency": "USD",
+  "nav_frequency": "daily",
+  "market_timezone": "America/New_York",
+  "market_open": "09:30",
+  "market_close": "16:00",
+  "tolerance_bps": 2.0,
+  "materiality_bps": 5.0,
+  "oracle_update_frequency_minutes": 60,
+  "alignment_window_minutes": 30
+}

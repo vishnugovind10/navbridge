@@ -1,0 +1,37 @@
+# NavBridge Architecture
+
+NavBridge V1 is a Python library and CLI. It has no database, auth layer, web UI, or live oracle dependency.
+
+## Module Layout
+
+```text
+navbridge/
+  core/            typed domain models
+  oracle/          oracle source adapters, V1 simulation only
+  administrator/   CSV and JSON administrator NAV ingesters
+  classifier/      rule-based break classification
+  monitor/         alignment, divergence calculation, report assembly
+  reporter/        JSON, Markdown, and tolerance recommendation output
+  cli.py           command-line entry point
+```
+
+## Data Flow
+
+1. `AdministratorAdapter` loads administrator NAV records.
+2. `OracleAdapter` returns oracle NAV records for the same window.
+3. `MonitorEngine` aligns records by nearest timestamp inside `alignment_window_minutes`.
+4. The monitor computes signed divergence in basis points.
+5. `BreakClassifier` applies explicit rules for the five V1 break types.
+6. `DivergenceReport` is serialized to JSON and Markdown.
+
+## V1 Break Types
+
+- `timing_drift`
+- `methodology_drift`
+- `market_hours_asymmetry`
+- `corporate_action_lag`
+- `data_feed_failure`
+
+## Scope Boundaries
+
+NavBridge does not issue tokens, calculate legal NAV, run KYC, or replace fund accounting systems. It monitors and explains divergence between records supplied by other systems.
