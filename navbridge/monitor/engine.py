@@ -16,6 +16,7 @@ from navbridge.core.report import DivergenceReport
 from navbridge.core.schema import RUN_ID_ALGORITHM, stable_digest
 from navbridge.oracle.base import OracleAdapter
 from navbridge.reporter.policy_advisor import recommend_tolerance_bps
+from navbridge.validation.contracts import validate_nav_records
 
 
 class MonitorEngineError(ValueError):
@@ -146,18 +147,18 @@ class MonitorEngine:
         return min(candidates, key=lambda item: abs(item.timestamp - admin.timestamp))
 
     def _validate_records(self, records: list[NavRecord], source: str) -> None:
-        seen: set[tuple[str, str, datetime]] = set()
-        for record in records:
-            if record.source != source:
-                raise MonitorEngineError(f"{source} adapter returned record with source={record.source}")
-            if record.fund_id != self.config.fund_id:
-                raise MonitorEngineError(f"{source} adapter returned fund_id={record.fund_id}; expected {self.config.fund_id}")
-            if record.currency != self.config.base_currency:
-                raise MonitorEngineError(f"{source} adapter returned currency={record.currency}; expected {self.config.base_currency}")
-            key = (record.fund_id, record.currency, record.timestamp)
-            if key in seen:
-                raise MonitorEngineError(f"{source} adapter returned duplicate timestamp {record.timestamp.isoformat()}")
-            seen.add(key)
+        result = validate_nav_records(
+            records,
+            expected_source=source,
+            expected_fund_id=self.config.fund_id,
+            expected_currency=self.config.base_currency,
+            require_non_empty=False,
+            allow_zero_nav=source == "oracle",
+        )
+        errors = [issue for issue in result.issues if issue.severity == "error"]
+        if errors:
+            first = errors[0]
+            raise MonitorEngineError(f"{source} adapter contract failed ({first.code}): {first.message}")
 
 
 def _direction(signed_bps: float) -> DivergenceDirection:

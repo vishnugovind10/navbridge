@@ -40,3 +40,7 @@ Required behavior:
 ## Monitor Enforcement
 
 `MonitorEngine` rejects records with the wrong source, wrong fund ID, wrong currency, duplicate timestamps, or invalid time windows. That enforcement is deliberate: adapter failures should be visible at the boundary rather than appearing as ordinary NAV breaks.
+
+## Pre-Run Validation
+
+Use `navbridge.validation.validate_nav_records()` in adapter tests and `navbridge validate-admin-file` for administrator files before running reports. This gives integration teams a smaller failure surface than a full monitor run.

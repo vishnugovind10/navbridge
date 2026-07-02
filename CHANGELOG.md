@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - Validation and Conformance Surface
+
+- Added `navbridge.validation` for pre-run adapter and administrator-file validation.
+- Added `navbridge validate-admin-file` with text and JSON output.
+- Added validation documentation for internal integration teams.
+- Added tests for validation API and CLI behavior.
+
 ## 0.2.0 - Institutional Contract Hardening
 
 - Added versioned JSON report metadata: `schema_version`, `run_id`, input counts, monitor parameters, and config snapshot.

@@ -14,6 +14,7 @@ from navbridge.monitor.engine import MonitorEngine
 from navbridge.oracle.simulated import SimulatedOracle, get_drift_model
 from navbridge.reporter.json_reporter import write_json_report
 from navbridge.reporter.markdown_reporter import report_to_markdown, write_markdown_report
+from navbridge.validation.contracts import validate_administrator_file
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -30,9 +31,17 @@ def main(argv: list[str] | None = None) -> int:
     monitor.add_argument("--output-md", default="-")
     monitor.add_argument("--advise-policy", action="store_true")
     monitor.add_argument("--alignment-window", type=int, default=None)
+    validate_admin = subparsers.add_parser("validate-admin-file", help="Validate an administrator NAV file against a FundConfig.")
+    validate_admin.add_argument("--config", required=True)
+    validate_admin.add_argument("--admin-file", required=True)
+    validate_admin.add_argument("--start", required=True)
+    validate_admin.add_argument("--end", required=True)
+    validate_admin.add_argument("--json", action="store_true", help="Emit machine-readable validation output.")
     args = parser.parse_args(argv)
     if args.command == "monitor":
         return _run_monitor(args)
+    if args.command == "validate-admin-file":
+        return _run_validate_admin_file(args)
     parser.print_help()
     return 0
 
@@ -66,6 +75,22 @@ def _run_monitor(args: argparse.Namespace) -> int:
     else:
         print(report_to_markdown(report))
     return 0
+
+
+def _run_validate_admin_file(args: argparse.Namespace) -> int:
+    config = FundConfig.from_dict(json.loads(Path(args.config).read_text(encoding="utf-8")))
+    start = _parse_window_start(args.start)
+    end = _parse_window_end(args.end)
+    result = validate_administrator_file(args.admin_file, config, start, end)
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    else:
+        status = "PASS" if result.valid else "FAIL"
+        print(f"Administrator NAV validation: {status}")
+        print(f"Records checked: {result.records_checked}")
+        for issue in result.issues:
+            print(f"{issue.severity.upper()} {issue.code}: {issue.message}")
+    return 0 if result.valid else 1
 
 
 def _administrator(path: str, config: FundConfig):

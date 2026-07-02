@@ -74,7 +74,7 @@ def test_monitor_rejects_duplicate_adapter_timestamps() -> None:
         NavRecord("FUND_001", "oracle", timestamp, Decimal("1.0"), "USD", {}),
     ])
 
-    with pytest.raises(MonitorEngineError, match="duplicate timestamp"):
+    with pytest.raises(MonitorEngineError, match="duplicate_timestamp"):
         MonitorEngine(config, oracle, admin, BreakClassifier(config)).run(
             datetime(2026, 1, 1, tzinfo=UTC),
             datetime(2026, 1, 2, tzinfo=UTC),

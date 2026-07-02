@@ -6,4 +6,4 @@ from navbridge.core.divergence import DivergenceEvent
 from navbridge.core.report import DivergenceReport
 
 __all__ = ["FundConfig", "NavRecord", "DivergenceEvent", "DivergenceReport"]
-__version__ = "0.2.0"
+__version__ = "0.3.0"
