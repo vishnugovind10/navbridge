@@ -1,10 +1,25 @@
-# NavBridge
+# navbridge
 
-NAV integrity monitoring for tokenized funds.
+> **NAV Integrity Monitoring for Tokenized Funds**: Quantify the gap between on-chain oracle NAV and off-chain administrator NAV, classify why it happened, and produce an audit-grade report — instead of a reconciliation spreadsheet nobody trusts.
 
-NavBridge is an open-source Python framework for detecting, classifying, and documenting divergence between on-chain oracle NAV and off-chain fund administrator NAV.
+## The Thesis: Every Tokenized Fund Has Two Truths
 
-It is designed to be adapted by fund operations, oracle, tokenization, and protocol risk teams that need explainable NAV integrity controls instead of a demo dashboard.
+Every tokenized fund publishes two NAV numbers. The on-chain oracle NAV is what DeFi protocols, collateral managers, and secondary-market participants actually trade against. The off-chain administrator NAV is what governs subscriptions, redemptions, audit support, and regulatory records. These two numbers are rarely identical, and the gap is not noise — it's produced by specific, nameable causes: timing lag between update cycles, methodology differences between pricing models, market-hours asymmetry when the oracle updates but the administrator doesn't, corporate actions, and outright oracle outages.
+
+Most institutions currently handle this with one-off proprietary reconciliation scripts that compute a delta and stop there — they don't explain *why* the delta exists, and they don't produce evidence that would survive an audit. `navbridge` treats NAV divergence as a reconciliation and audit-control problem, not a blockchain data problem. It ingests both NAV series, aligns them by timestamp, computes signed divergence in basis points, applies an explicit rule-based classifier to assign one of five break types, and emits a versioned JSON/Markdown report with a reproducible audit manifest. It does not decide which NAV is "right" — it makes the disagreement between them legible and traceable to a specific rule.
+
+## Core Metrics Defined
+
+- **Divergence (bps)**: `(oracle_nav_per_unit - administrator_nav_per_unit) / administrator_nav_per_unit * 10,000`, signed. Positive means the oracle is quoting above the administrator; negative means below.
+- **Severity**: A deterministic function of divergence magnitude against two fund-level thresholds, `tolerance_bps` and `materiality_bps`:
+  - `negligible` — divergence is exactly zero
+  - `within_tolerance` — magnitude `<= tolerance_bps`
+  - `warning` — magnitude `<= min(materiality_bps, tolerance_bps * 2)`
+  - `material` — magnitude `<= materiality_bps`
+  - `critical` — magnitude `> materiality_bps`, or the break is classified as `data_feed_failure` regardless of magnitude
+- **Break Type**: One of five explicit, rule-ordered classifications — `data_feed_failure` (stale or zero oracle NAV), `corporate_action_lag`, `market_hours_asymmetry` (divergence observed outside configured market hours), `methodology_drift` (divergence is directionally persistent across ≥80% of market-hours observations), or `timing_drift` (the fallback, optionally tied to a configured oracle lag).
+- **Policy Compliance**: `true` only if every observed divergence in the run stayed within `tolerance_bps`.
+- **Run ID**: A stable digest over the fund config, report window, and input record counts — the same inputs always produce the same run ID, which is what makes a report reproducible evidence rather than a one-off script output.
 
 ## Real Report Sample
 
@@ -34,20 +49,6 @@ Generated from `examples/mmf_scenario`:
 | Methodology Drift | 22 | 71% |
 ```
 
-## The Problem
-
-Every tokenized fund has two NAV sources. The on-chain source is the oracle NAV used by DeFi protocols, collateral managers, and secondary-market participants. The off-chain source is the administrator NAV used for subscriptions, redemptions, audit support, and regulatory records.
-
-Those numbers are rarely identical. Timing lag, methodology differences, market-hours asymmetry, corporate actions, and oracle outages can all create measurable divergence.
-
-Most institutions handle this with proprietary reconciliation scripts. NavBridge gives fund teams, protocol risk teams, and builders a shared open-source framework for modeling the gap and documenting a NAV integrity policy.
-
-## What NavBridge Does
-
-- Monitor: ingest simulated oracle NAV and administrator NAV files, then compute per-record divergence.
-- Classify: assign rule-based break types and severity levels.
-- Report: write structured JSON and human-readable Markdown reports.
-
 ## Quickstart
 
 ```powershell
@@ -73,7 +74,7 @@ navbridge monitor `
   --advise-policy
 ```
 
-Run all examples:
+Run all three scenarios plus a batch portfolio:
 
 ```powershell
 python examples/mmf_scenario/run.py
@@ -82,54 +83,48 @@ python examples/market_hours_scenario/run.py
 navbridge batch --file examples/batch_portfolio.json --summary-json reports/batch_summary.json
 ```
 
-Run tests:
-
-```powershell
-python -m pytest -q
-```
-
-## The Three Scenarios
-
 - `examples/mmf_scenario`: tokenized money market fund with weekend and after-hours drift.
 - `examples/treasury_fund_scenario`: treasury fund with a simulated coupon/corporate-action lag.
 - `examples/market_hours_scenario`: oracle feed degradation where stale NAV is classified as critical.
-- `examples/batch_portfolio.json`: batch run over multiple fund scenarios with per-run evidence manifests.
 
 ## Architecture
 
-See `ARCHITECTURE.md`.
-
 ```text
-administrator files -> ingesters -> monitor -> classifier -> report object -> JSON/Markdown
-simulated oracle ----^
+administrator files -> ingesters ---\
+                                      -> MonitorEngine -> BreakClassifier -> DivergenceReport -> JSON / Markdown / audit manifest
+simulated oracle    -> OracleAdapter /
 ```
 
-Key operational documents:
+- `core/` — typed domain models (`NavRecord`, `FundConfig`, `DivergenceEvent`, `DivergenceReport`).
+- `oracle/` — oracle source adapters; V1 ships simulation only.
+- `administrator/` — CSV and JSON administrator NAV ingesters.
+- `monitor/` — `MonitorEngine` aligns oracle and administrator records by nearest timestamp inside `alignment_window_minutes`, computes signed divergence, and assembles the report.
+- `classifier/` — `BreakClassifier` applies the ordered rule set in `classifier/rules.py` to assign break type, severity, confidence, and evidence to every event.
+- `policy/` — versioned institutional policy packs that override tolerance/materiality thresholds and evidence requirements.
+- `reporter/` — JSON, Markdown, tolerance-recommendation, and audit-manifest output.
+- `cli.py` — the `navbridge` command-line entry point.
 
-- `docs/adapter_contracts.md`: integration contract for internal oracle and administrator adapters.
-- `docs/controls_matrix.md`: control objectives mapped to code and report evidence.
-- `docs/data_validation.md`: pre-run validation workflow for administrator files and adapter output.
-- `docs/evidence_retention.md`: audit manifest workflow for reproducible evidence packages.
-- `docs/internal_adoption_guide.md`: recommended path for adapting NavBridge internally.
-- `docs/model_risk_and_validation.md`: model-risk notes and validation expectations.
-- `docs/policy_packs.md`: versioned institutional policy execution framework.
-- `docs/report_schema_v1.json`: JSON report schema.
-- `SECURITY.md`: security boundary and vulnerability policy.
+Every JSON report is versioned (`navbridge.report.v1`) and carries a deterministic `run_id`, `input_record_counts`, `monitor_parameters`, and a `config_snapshot` — the fields that let a report stand as reproducible evidence rather than an ad hoc script's stdout. See [ARCHITECTURE.md](ARCHITECTURE.md) and [docs/report_schema_v1.json](docs/report_schema_v1.json).
 
-## Limitations
+## Scope / What This Is Not
 
-V1 uses simulated oracle data only. Administrator NAV files must be transformed into the NavBridge CSV or JSON schema before ingestion. The classifier is heuristic and rule-based, not exhaustive. Real production breaks may need institution-specific policy overrides.
+`navbridge` is simulation-first and V1 is deliberately bounded:
 
-See `docs/limitations.md`.
+- Oracle data is simulated — no live Chainlink, RedStone, Pyth, or custom oracle reads
+- Administrator NAV input must already be mapped to the NavBridge CSV or JSON schema
+- The classifier is heuristic and rule-based, not exhaustive — real production breaks may need institution-specific policy overrides
+- Alignment uses nearest-timestamp matching within `alignment_window_minutes`; no match produces a zero-NAV `data_feed_failure` event
+- Single share-class funds only; multi-share-class funds are deferred
+- No database, auth layer, alerting, dashboard, or multi-user backend
+- It does not issue tokens, calculate legal NAV, run KYC, or replace fund accounting systems — it monitors and explains divergence between records supplied by other systems
 
-## Roadmap
+See [docs/limitations.md](docs/limitations.md) for the full list, including why the alignment window is the most likely source of spurious breaks in production.
 
-- Live oracle adapters for Chainlink, RedStone, and Pyth.
-- Fund administrator API connectors.
-- ERC-4626 vault read adapters.
-- Alerting and workflow integrations.
-- Optional dashboard after the core monitoring contract is stable.
+## Development
 
-## Background
+```powershell
+python -m pip install -e ".[dev]"
+python -m pytest -q
+```
 
-NavBridge is built from the fund-operations side of tokenized assets. It treats NAV divergence as a reconciliation and audit-control problem first, and a blockchain data problem second. That boundary keeps V1 focused on explainable monitoring instead of token issuance, KYC, or fund accounting.
+Key operational documents: [docs/adapter_contracts.md](docs/adapter_contracts.md) (integration contract for oracle/administrator adapters), [docs/controls_matrix.md](docs/controls_matrix.md) (control objectives mapped to code and report evidence), [docs/evidence_retention.md](docs/evidence_retention.md) (audit manifest workflow), [docs/policy_packs.md](docs/policy_packs.md) (versioned policy execution), and [SECURITY.md](SECURITY.md).
