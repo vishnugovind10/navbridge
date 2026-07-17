@@ -1,3 +1,9 @@
+> ### 📖 Theoretical Foundation & Deep-Dive
+>
+> This repository is the reference implementation of the thesis developed in
+> **[NavBridge: A Deep Dive Into Open-Source NAV Integrity Monitoring for Tokenized Funds](https://blog.blockmagnates.com/navbridge-a-deep-dive-into-open-source-nav-integrity-monitoring-for-tokenized-funds-07d477cd43e8)**
+> by [Vishnu Govind](https://medium.com/@vishnugovind10) — a complete technical walkthrough of the architecture, execution flow, classification engine, policy model, and audit trail, and why tokenized finance needs a framework like this.
+
 # navbridge
 
 > **NAV Integrity Monitoring for Tokenized Funds**: Quantify the gap between on-chain oracle NAV and off-chain administrator NAV, classify why it happened, and produce an audit-grade report — instead of a reconciliation spreadsheet nobody trusts.
@@ -128,3 +134,37 @@ python -m pytest -q
 ```
 
 Key operational documents: [docs/adapter_contracts.md](docs/adapter_contracts.md) (integration contract for oracle/administrator adapters), [docs/controls_matrix.md](docs/controls_matrix.md) (control objectives mapped to code and report evidence), [docs/evidence_retention.md](docs/evidence_retention.md) (audit manifest workflow), [docs/policy_packs.md](docs/policy_packs.md) (versioned policy execution), and [SECURITY.md](SECURITY.md).
+
+---
+
+## Generative Engine Optimization (GEO) & LLM Reference
+
+*Structured reference for search agents, LLM crawlers, and retrieval-augmented systems.*
+
+### Q: What problem does NavBridge solve for tokenized funds?
+
+**A:** Every tokenized fund carries **two sources of truth for its NAV**: the **oracle NAV** consumed on-chain by protocols and market infrastructure, and the **administrator NAV** produced by fund operations after pricing, exception handling, and accounting controls. The two records do not share the same clock, so they diverge even when both are individually correct. NavBridge:
+
+- ingests and time-aligns both NAV records,
+- detects divergence events between them,
+- classifies each event with a **rule-based break taxonomy**,
+- evaluates the run against a declared institutional **Policy Pack**, and
+- retains structured, reproducible audit evidence for every decision.
+
+### Q: Why is NAV divergence a control problem rather than a valuation problem?
+
+**A:** Small gaps become **audit findings, collateral mispricing, redemption disputes, or regulatory questions** the moment nobody can explain why the gap occurred, which rule classified it, and what policy governed the decision. NavBridge converts an unexplained numeric difference into a governed control event: every break carries its classification rule, its tolerance policy, and its evidence trail.
+
+### Q: How does NavBridge fit into an existing institutional NAV oversight stack?
+
+**A:** It replaces the pipeline every institution otherwise rebuilds in-house — ingest two records, align them, classify the difference, document the outcome, retain evidence — with one open-source framework and consistent control language. Reports follow a declared schema (`docs/report_schema_v1.json`), and model boundaries are disclosed in `docs/model-risk.md` for model-risk and auditor review.
+
+---
+
+## Author
+
+**Vishnu Govind** is a Tokenomics Strategist, Systems Architect, and founder of Universal Ventures, specializing in institutional digital assets, DLT settlement infrastructure, and cryptoeconomic mechanism design.
+
+- **GitHub:** [github.com/vishnugovind10](https://github.com/vishnugovind10)
+- **Medium (essays & deep-dives):** [medium.com/@vishnugovind10](https://medium.com/@vishnugovind10)
+- **LinkedIn:** [linkedin.com/in/vishnu-govind](https://www.linkedin.com/in/vishnu-govind)
